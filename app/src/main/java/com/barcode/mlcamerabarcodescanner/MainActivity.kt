@@ -6,7 +6,9 @@ import androidx.appcompat.app.AppCompatActivity
 import android.net.Uri
 import android.os.Bundle
 import android.util.Log
+import android.util.Size
 import android.view.ViewGroup
+import android.widget.TextView
 import android.widget.Toast
 import androidx.camera.core.*
 import androidx.camera.lifecycle.ProcessCameraProvider
@@ -14,18 +16,21 @@ import androidx.camera.view.PreviewView
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
+import org.w3c.dom.Text
 import java.io.File
 import java.util.concurrent.ExecutorService
 import java.util.concurrent.Executors
 
 class MainActivity : AppCompatActivity() {
     private lateinit var previewView:PreviewView
+    private lateinit var scannedBarCodeLabel: TextView
     private lateinit var cameraExecutor: ExecutorService
     private lateinit var barcodeBoxView: BarcodeBoxView
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
         previewView = findViewById(R.id.previewView)
+        scannedBarCodeLabel = findViewById(R.id.scannerBarCode)
         cameraExecutor = Executors.newSingleThreadExecutor()
         barcodeBoxView = BarcodeBoxView(this)
         addContentView(barcodeBoxView, ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT))
@@ -74,9 +79,11 @@ class MainActivity : AppCompatActivity() {
 
         cameraProviderFuture.addListener({
             val cameraProvider = cameraProviderFuture.get()
-
+// Set the target resolution for the camera preview
+            val targetResolution = Size(1280, 720)
             // Preview
             val preview = Preview.Builder()
+                .setTargetResolution(targetResolution)
                 .build()
                 .also {
                     it.setSurfaceProvider(previewView.surfaceProvider)
@@ -94,7 +101,9 @@ class MainActivity : AppCompatActivity() {
                             barcodeBoxView,
                             previewView.width.toFloat(),
                             previewView.height.toFloat()
-                        )
+                        ){
+                            scannedBarCode -> scannedBarCodeLabel.text = scannedBarCode
+                        }
                     )
                 }
 

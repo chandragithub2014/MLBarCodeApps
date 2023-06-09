@@ -14,7 +14,8 @@ import com.google.mlkit.vision.common.InputImage
 class MLBarcodeAnalyzer(private val context: Context,
                         private val barcodeBoxView: BarcodeBoxView,
                         private val previewViewWidth: Float,
-                        private val previewViewHeight: Float
+                        private val previewViewHeight: Float,
+                        private val scannedBarCode : (barCode:String) -> Unit
 ) : ImageAnalysis.Analyzer {
     private var scaleX = 1f
     private var scaleY = 1f
@@ -58,6 +59,7 @@ class MLBarcodeAnalyzer(private val context: Context,
                                 Toast.LENGTH_SHORT
                             )
                                 .show()
+                            scannedBarCode(barcode.rawValue.toString())
                             barcode.boundingBox?.let { rect ->
                                 barcodeBoxView.setRect(adjustBoundingRect(rect))
                             }
@@ -72,6 +74,7 @@ class MLBarcodeAnalyzer(private val context: Context,
                                 )
                             }*/
                         }
+                        barcodeBoxView.setRect(RectF())
                     } else {
                         // Remove bounding rect
                         barcodeBoxView.setRect(RectF())
