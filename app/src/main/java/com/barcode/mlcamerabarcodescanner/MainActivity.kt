@@ -15,6 +15,7 @@ import androidx.camera.lifecycle.ProcessCameraProvider
 import androidx.camera.view.PreviewView
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
+import androidx.lifecycle.lifecycleScope
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.google.mlkit.vision.barcode.BarcodeScanner
 import com.google.mlkit.vision.barcode.BarcodeScannerOptions
@@ -23,12 +24,17 @@ import com.google.mlkit.vision.common.InputImage
 import java.io.File
 import java.util.concurrent.ExecutorService
 import java.util.concurrent.Executors
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
+
 private const val CAMERA_PERMISSION_REQUEST_CODE = 1
 class MainActivity : AppCompatActivity() {
     private lateinit var previewView:PreviewView
     private lateinit var barCodeResult:TextView
     private lateinit var cameraExecutor: ExecutorService
     private lateinit var barcodeBoxView: BarcodeBoxView
+    private var lastScannedBarcodeValue: String? = null
+
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -38,6 +44,10 @@ class MainActivity : AppCompatActivity() {
         if (hasCameraPermission()) bindCameraUseCases()
         else requestPermission()
 
+    }
+
+    private suspend fun pauseScanning(delayMillis: Long) {
+        delay(delayMillis)
     }
     // checking to see whether user has already granted permission
     private fun hasCameraPermission() =
@@ -143,9 +153,14 @@ class MainActivity : AppCompatActivity() {
                     val barcode = barcodeList.getOrNull(0)
 
                     // `rawValue` is the decoded value of the barcode
-                    barcode?.rawValue?.let { value ->
-                        barCodeResult.text = value.toString()
-                    }
+                    if (lastScannedBarcodeValue != barcode?.rawValue) {
+                        barcode?.rawValue?.let { value ->
+                            barCodeResult.text = value
+
+                        }
+                }
+
+
                 }
                 .addOnFailureListener {
                     // This failure will happen if the barcode scanning model
